@@ -63,8 +63,12 @@ jobs:
         # テスト前に生成しておく（git 管理外のファイル）
         run: bundle exec rails tailwindcss:build
 
-      - name: Prepare database
-        run: bundle exec rails db:prepare
+      - name: Set up test database
+        # db:prepare は新規 DB 作成時に seed まで投入してしまい、
+        # テストがサンプルデータと衝突するため、スキーマだけ読み込む
+        run: |
+          bundle exec rails db:create
+          bundle exec rails db:schema:load
 
       - name: Run RSpec
         run: bundle exec rspec
