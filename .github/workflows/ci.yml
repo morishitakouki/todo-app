@@ -17,8 +17,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          # .ruby-version を参照して bundler-cache も有効化
-          ruby-version-file: .ruby-version
+          ruby-version: "3.3.11" # .ruby-version と合わせる
           bundler-cache: true
 
       - name: Run RuboCop
@@ -55,7 +54,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version-file: .ruby-version
+          ruby-version: "3.3.11"
           bundler-cache: true
 
       - name: Build Tailwind CSS
