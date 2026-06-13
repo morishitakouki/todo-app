@@ -1,0 +1,2 @@
+<%= turbo_stream.update "tasks", partial: "tasks/list", locals: { tasks: @tasks, filter: @filter } %>
+<%= turbo_stream.update "filters", partial: "tasks/filters", locals: { counts: @counts, filter: @filter } %>

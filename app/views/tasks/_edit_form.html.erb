@@ -1,0 +1,5 @@
+<%= turbo_frame_tag dom_id(task), class: "block" do %>
+  <div class="rounded-xl border border-indigo-200 bg-indigo-50/40 p-4 shadow-sm">
+    <%= render "tasks/form", task: task, filter: filter %>
+  </div>
+<% end %>

@@ -1,0 +1,31 @@
+# 開発用 Dockerfile（docker-compose から使用）
+FROM ruby:3.3-slim
+
+ENV LANG=C.UTF-8 \
+    TZ=Asia/Tokyo \
+    RAILS_ENV=development \
+    BUNDLE_PATH=/usr/local/bundle
+
+# pg / native gem のビルドに必要なパッケージ
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends \
+      build-essential \
+      libpq-dev \
+      libyaml-dev \
+      postgresql-client \
+      git \
+      curl && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace/todo-app
+
+# 先に Gemfile だけコピーして bundle install（レイヤーキャッシュを効かせる）
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+
+# 残りのソースをコピー（実行時は compose の bind mount で上書きされる）
+COPY . .
+
+EXPOSE 3000
+
+CMD ["bin/dev-docker"]

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Docker コンテナ内で Rails を起動するためのエントリポイント。
+set -euo pipefail
+
+echo "⏳ PostgreSQL の起動を待っています..."
+until pg_isready -h "${DB_HOST:-db}" -U "${DB_USERNAME:-postgres}" -q; do
+  sleep 1
+done
+echo "✅ PostgreSQL に接続できました"
+
+# gem が揃っていなければインストール（通常はイメージ側で導入済み）
+bundle check > /dev/null 2>&1 || bundle install
+
+echo "🗃  データベースを準備しています (db:prepare)..."
+bin/rails db:prepare
+
+echo "🎨 Tailwind CSS をビルドしています..."
+bin/rails tailwindcss:build
+
+# 前回の残り PID を掃除
+rm -f tmp/pids/server.pid
+
+echo "🚀 Rails サーバーを起動します → http://localhost:3100 (ホスト側)"
+exec bin/rails server -b 0.0.0.0 -p 3000

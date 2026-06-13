@@ -1,0 +1,42 @@
+<%= form_with model: task, class: "space-y-3" do |f| %>
+  <% if task.errors.any? %>
+    <div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+      <%= task.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <%= hidden_field_tag :filter, filter %>
+
+  <%= f.text_field :title,
+        placeholder: "新しいタスクを入力…",
+        autocomplete: "off",
+        class: "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" %>
+
+  <%= f.text_area :notes, rows: 2,
+        placeholder: "メモ（任意）",
+        class: "w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder-slate-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" %>
+
+  <div class="flex flex-wrap items-end gap-3">
+    <label class="flex flex-col gap-1 text-xs font-medium text-slate-500">
+      優先度
+      <%= f.select :priority,
+            [["低", "low"], ["中", "medium"], ["高", "high"]], {},
+            class: "rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" %>
+    </label>
+
+    <label class="flex flex-col gap-1 text-xs font-medium text-slate-500">
+      期限
+      <%= f.date_field :due_on,
+            class: "rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" %>
+    </label>
+
+    <div class="ml-auto flex items-center gap-2">
+      <% if task.persisted? %>
+        <%= link_to "キャンセル", task_path(task, filter: filter),
+              class: "rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100" %>
+      <% end %>
+      <%= f.submit (task.persisted? ? "更新する" : "追加する"),
+            class: "cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300" %>
+    </div>
+  </div>
+<% end %>
