@@ -1,0 +1,30 @@
+# 本番（EC2）用の Docker Compose 設定。
+# DB はローカルコンテナではなく RDS を使う。接続情報は同じディレクトリの .env から読み込む
+#   （DB_HOST / DB_USERNAME / DB_PASSWORD を .env に置く。詳細は .env.example）。
+#
+# 使い方（EC2 上）:
+#   docker compose -f docker-compose.prod.yml up -d --build
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: bin/dev-docker
+    # EC2 が再起動してもアプリが自動で立ち上がるようにする
+    restart: unless-stopped
+    environment:
+      RAILS_ENV: development
+      DB_HOST: ${DB_HOST}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      RAILS_MAX_THREADS: 5
+    volumes:
+      - .:/workspace/todo-app
+      - bundle:/usr/local/bundle
+    ports:
+      - "3100:3000" # ホスト:3100 → コンテナ:3000
+    stdin_open: true
+    tty: true
+
+volumes:
+  bundle:

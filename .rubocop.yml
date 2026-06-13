@@ -1,0 +1,19 @@
+# Rails 公式の omakase スタイルをベースにする
+# https://github.com/rails/rubocop-rails-omakase
+inherit_gem:
+  rubocop-rails-omakase: rubocop.yml
+
+AllCops:
+  TargetRubyVersion: 3.3
+  NewCops: enable
+  Exclude:
+    - "bin/**/*"
+    - "db/schema.rb"
+    - "db/migrate/**/*"
+    - "vendor/**/*"
+    - "node_modules/**/*"
+    - "tmp/**/*"
+    - "storage/**/*"
+    - "log/**/*"
+    - "config/boot.rb"
+    - "config/environment.rb"

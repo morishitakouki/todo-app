@@ -68,3 +68,39 @@ docker compose logs -f web
 - コントローラ: `app/controllers/tasks_controller.rb`
 - ビュー: `app/views/tasks/`
 - ルーティング: `config/routes.rb`
+
+## テスト / Lint
+
+```bash
+# テスト（RSpec）
+docker compose exec -e RAILS_ENV=test web bundle exec rspec
+
+# Lint（RuboCop）。-A を付けると自動修正
+docker compose exec web bundle exec rubocop
+docker compose exec web bundle exec rubocop -A
+```
+
+- テスト: `spec/`（`spec/models/`・`spec/requests/`・`spec/factories/`）
+- RuboCop 設定: `.rubocop.yml`（`rubocop-rails-omakase` ベース）
+
+## CI / CD（GitHub Actions）
+
+ワークフロー: `.github/workflows/ci.yml`
+
+- **CI**: PR と main への push で RuboCop + RSpec を自動実行
+- **CD**: main へマージ（push）されると、テストが通った場合のみ EC2 へ自動デプロイ
+
+### 本番（EC2）構成
+
+- EC2 上で `docker compose -f docker-compose.prod.yml up -d --build` で起動
+- DB は RDS（接続情報は EC2 上の `.env` に置く。サンプルは `.env.example`）
+- デプロイは GitHub Actions が SSH で EC2 に入り、`git reset --hard origin/main` →
+  `docker compose -f docker-compose.prod.yml up -d --build` を実行
+
+必要な GitHub Secrets:
+
+| Secret 名     | 内容                                     |
+| ------------- | ---------------------------------------- |
+| `EC2_HOST`    | EC2 のパブリック IP（例: `54.249.235.88`） |
+| `EC2_USER`    | SSH ユーザー（例: `root`）                |
+| `EC2_SSH_KEY` | EC2 にログインできる秘密鍵の中身          |
