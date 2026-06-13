@@ -8,7 +8,7 @@ Task.create!([
   { title: "プレゼン資料を仕上げる",    notes: "来週の定例向け。スライド10枚程度。",          priority: :high,   due_on: Date.current + 2 },
   { title: "Rails のドキュメントを読む", notes: "Hotwire(Turbo) の章をひと通り。",            priority: :low },
   { title: "ランニング 5km",                                                                  priority: :low,    completed: true },
-  { title: "図書館に本を返却する",      notes: "延長は不可。",                                priority: :medium, completed: true },
+  { title: "図書館に本を返却する",      notes: "延長は不可。",                                priority: :medium, completed: true }
 ])
 
 puts "Seeded #{Task.count} tasks."

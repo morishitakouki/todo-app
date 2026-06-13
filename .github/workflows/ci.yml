@@ -1,0 +1,98 @@
+name: CI / CD
+
+# - PR と main への push でテスト & Lint を実行（CI）
+# - main への push（= マージ）でテストが通ったら EC2 へ自動デプロイ（CD）
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: RuboCop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.11" # .ruby-version と合わせる
+          bundler-cache: true
+
+      - name: Run RuboCop
+        run: bundle exec rubocop --format github
+
+  test:
+    name: RSpec
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      RAILS_ENV: test
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.11"
+          bundler-cache: true
+
+      - name: Build Tailwind CSS
+        # ビュー（レイアウト）が app/assets/builds/tailwind.css を要求するため、
+        # テスト前に生成しておく（git 管理外のファイル）
+        run: bundle exec rails tailwindcss:build
+
+      - name: Set up test database
+        # db:prepare は新規 DB 作成時に seed まで投入してしまい、
+        # テストがサンプルデータと衝突するため、スキーマだけ読み込む
+        run: |
+          bundle exec rails db:create
+          bundle exec rails db:schema:load
+
+      - name: Run RSpec
+        run: bundle exec rspec
+
+  deploy:
+    name: Deploy to EC2
+    # lint と test が両方成功したときだけ実行
+    needs: [lint, test]
+    # main への push（マージ）のときだけ。PR では動かさない
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /root/todo-app
+            # 最新の main に強制的に合わせる（サーバー側の手編集があっても衝突しない）
+            git fetch origin main
+            git reset --hard origin/main
+            # 本番用 compose で再ビルド & 再起動（不要な孤立コンテナも掃除）
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+            # 古いイメージを掃除してディスクを節約
+            docker image prune -f
